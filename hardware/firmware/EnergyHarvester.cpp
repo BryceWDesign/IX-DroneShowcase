@@ -5,13 +5,9 @@
 
 #include "EnergyHarvester.h"
 
-// Initialize energy harvester hardware and state
 void EnergyHarvester::init() {
-    // Initialize RF harvester
     rfHarvester.init();
-    // Initialize thermal TEG modules
     thermalHarvester.init();
-    // Initialize piezoelectric harvesters
     piezoHarvester.init();
 
     supercapBank.init();
@@ -20,28 +16,27 @@ void EnergyHarvester::init() {
     currentEnergy = 0;
 }
 
-// Update harvesting from all sources, manage power routing
 void EnergyHarvester::update() {
-    int rfPower = rfHarvester.readPower();
-    int thermalPower = thermalHarvester.readPower();
-    int piezoPower = piezoHarvester.readPower();
+    int rfEnergy = rfHarvester.harvest();
+    int thermalEnergy = thermalHarvester.harvest();
+    int piezoEnergy = piezoHarvester.harvest();
 
-    // Aggregate power
-    currentEnergy = rfPower + thermalPower + piezoPower;
+    int totalHarvested = rfEnergy + thermalEnergy + piezoEnergy;
 
-    // Route energy: supercaps first, then battery
-    if (supercapBank.canCharge()) {
-        supercapBank.charge(currentEnergy);
-    } else {
-        battery.charge(currentEnergy);
+    // Store harvested energy first in supercapacitors
+    supercapBank.storeEnergy(totalHarvested);
+
+    // If supercapacitors are full, trickle charge battery
+    if(supercapBank.isFull()) {
+        battery.storeEnergy(supercapBank.releaseExcess());
     }
 
-    // Monitor and log
+    currentEnergy = supercapBank.getStoredEnergy() + battery.getStoredEnergy();
+
     logEnergyStatus(currentEnergy);
 }
 
 void EnergyHarvester::logEnergyStatus(int energy) {
-    Serial.print("Current harvested energy (mW): ");
+    Serial.print("Current harvested energy (mJ): ");
     Serial.println(energy);
 }
-
