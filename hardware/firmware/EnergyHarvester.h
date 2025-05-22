@@ -1,32 +1,33 @@
 // EnergyHarvester.h
-// IX-DroneShowcase: Ambient energy harvester interface
+// IX-DroneShowcase: Header for adaptive ambient energy harvesting
 // Author: BryceWDesign
 // License: MIT
 
 #ifndef ENERGY_HARVESTER_H
 #define ENERGY_HARVESTER_H
 
-#include <Arduino.h>
 #include "RFHarvester.h"
 #include "ThermalHarvester.h"
 #include "PiezoHarvester.h"
-#include "SuperCapBank.h"
-#include "Battery.h"
+#include "SupercapBank.h"
+#include "SolidStateBattery.h"
+#include <Arduino.h>
 
 class EnergyHarvester {
 public:
     void init();
     void update();
+    int getEnergy() const { return currentEnergy; }
+
 private:
     RFHarvester rfHarvester;
     ThermalHarvester thermalHarvester;
     PiezoHarvester piezoHarvester;
 
-    SuperCapBank supercapBank;
-    Battery battery;
+    SupercapBank supercapBank;
+    SolidStateBattery battery;
 
     int currentEnergy;
-
     void logEnergyStatus(int energy);
 };
 
