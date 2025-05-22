@@ -1,5 +1,5 @@
 // RFHarvester.cpp
-// IX-DroneShowcase: 2.4GHz RF Energy Harvester Implementation
+// IX-DroneShowcase: Implementation of RF Energy Harvester Class
 // Author: BryceWDesign
 // License: MIT
 
@@ -8,19 +8,20 @@
 
 void RFHarvester::init() {
     pinMode(RF_INPUT_PIN, INPUT);
-    mpptState = 0;
     lastReading = 0;
+    mpptState = 0;
 }
 
 int RFHarvester::readEnergy() {
-    int reading = analogRead(RF_INPUT_PIN);
-    int harvested = applyMPPT(reading);
-    lastReading = harvested;
-    return harvested;
+    int raw = analogRead(RF_INPUT_PIN);
+    return applyMPPT(raw);
 }
 
 int RFHarvester::applyMPPT(int rawInput) {
-    // Simulated MPPT logic for RF input optimization
-    int mpptOutput = (rawInput > threshold) ? rawInput - threshold : 0;
-    return constrain(mpptOutput, 0, 255);
+    int delta = rawInput - lastReading;
+    if (abs(delta) > threshold) {
+        mpptState = (delta > 0) ? 1 : -1;
+    }
+    lastReading = rawInput;
+    return rawInput + mpptState * 5;
 }
