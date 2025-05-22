@@ -1,5 +1,5 @@
 // EnergyHarvester.cpp
-// IX-DroneShowcase: Ambient energy harvester implementation
+// IX-DroneShowcase: Adaptive Ambient Energy Harvester Implementation
 // Author: BryceWDesign
 // License: MIT
 
@@ -9,34 +9,27 @@ void EnergyHarvester::init() {
     rfHarvester.init();
     thermalHarvester.init();
     piezoHarvester.init();
-
     supercapBank.init();
     battery.init();
-
     currentEnergy = 0;
 }
 
 void EnergyHarvester::update() {
-    int rfEnergy = rfHarvester.harvest();
-    int thermalEnergy = thermalHarvester.harvest();
-    int piezoEnergy = piezoHarvester.harvest();
+    int rfPower     = rfHarvester.readPower();     // mW
+    int thermalPower= thermalHarvester.readPower(); // mW
+    int piezoPower  = piezoHarvester.readPower();  // mW
 
-    int totalHarvested = rfEnergy + thermalEnergy + piezoEnergy;
+    int totalInput  = rfPower + thermalPower + piezoPower;
 
-    // Store harvested energy first in supercapacitors
-    supercapBank.storeEnergy(totalHarvested);
+    supercapBank.charge(totalInput);
+    battery.trickleCharge(totalInput / 4); // send portion to battery
 
-    // If supercapacitors are full, trickle charge battery
-    if(supercapBank.isFull()) {
-        battery.storeEnergy(supercapBank.releaseExcess());
-    }
-
-    currentEnergy = supercapBank.getStoredEnergy() + battery.getStoredEnergy();
+    currentEnergy = totalInput;
 
     logEnergyStatus(currentEnergy);
 }
 
 void EnergyHarvester::logEnergyStatus(int energy) {
-    Serial.print("Current harvested energy (mJ): ");
+    Serial.print("[EnergyHarvester] Input Power (mW): ");
     Serial.println(energy);
 }
