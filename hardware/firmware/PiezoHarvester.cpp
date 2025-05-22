@@ -1,5 +1,5 @@
 // PiezoHarvester.cpp
-// IX-DroneShowcase: Implementation for Piezoelectric Energy Harvester
+// IX-DroneShowcase: Source for Piezoelectric Energy Harvester logic
 // Author: BryceWDesign
 // License: MIT
 
@@ -12,14 +12,20 @@ void PiezoHarvester::init() {
 }
 
 int PiezoHarvester::readEnergy() {
-  int rawValue = analogRead(PIEZO_INPUT_PIN);
-  smoothedValue = 0.9 * smoothedValue + 0.1 * rawValue;
+  int raw = analogRead(PIEZO_INPUT_PIN);
+
+  // Simple exponential moving average
+  smoothedValue = 0.9 * smoothedValue + 0.1 * raw;
 
   return estimateEnergy((int)smoothedValue);
 }
 
 int PiezoHarvester::estimateEnergy(int smoothed) {
-  float voltage = (smoothed / 1023.0) * 5.0; // assuming 5V ADC reference
-  float power_mW = (voltage * voltage) / internalResistance * 1000.0;
+  // Convert analogRead value to voltage (assuming 3.3V ADC)
+  float voltage = (smoothed / 1023.0) * 3.3;
+
+  // Estimate power = V^2 / R (R is assumed internal resistance)
+  float power_mW = (voltage * voltage / internalResistance) * 1000.0;
+
   return (int)power_mW;
 }
